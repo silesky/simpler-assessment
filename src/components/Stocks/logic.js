@@ -1,138 +1,105 @@
 // @flow
-import { compose, withState, withHandlers, mapProps } from 'recompose/compose'
-import type { SessionT, SkillLevelT, TrackT } from 'types'
-import { searchArr, multiFilter } from 'utils'
+import {
+  compose,
+  withState,
+  withHandlers,
+  mapProps,
+  lifecycle,
+} from 'recompose'
+import type { StockT } from '../../shared/types'
+import { getStocks } from '../../shared/utils'
 
-type FiltersT = {
-  skillLevel: SkillLevelT[],
-  track: TrackT[],
-};
-
-type InitialPropsT = {
-  sessions: SessionT[],
-  skillLevels: SkillLevelT[],
-  tracks: TrackT[],
-};
-
-type InitialStateT = {
-  filters: FiltersT,
-  setFilters: Function,
-  textSearchInput: string,
-  setSearchText: Function,
-};
-
-type PropsWithStateT = InitialPropsT & InitialStateT;
-
-type PropsWithStateWithHandlersT = PropsWithStateT & {
-  changeSkillLevelFilters: Function,
-  changeTrackFilters: Function,
-  changeTextFilter: Function,
-  resetAllFilters: Function,
-};
-
-const filterByAll = (
-  sessions: SessionT[],
-  filters: FiltersT,
-  textSearchInput: string,
-): SessionT[] => {
-  const sessionsFilteredbyProperties = multiFilter(sessions, filters)
-  const sessionsFilteredBySearchTerm = searchArr(
-    sessionsFilteredbyProperties,
-    textSearchInput,
-  )
-  return sessionsFilteredBySearchTerm
-}
-
-const initialFilters: FiltersT = {
-  skillLevel: [],
-  track: [],
-}
-
+const initialStocks: StockT[] = getStocks()
 const withLogic = compose(
-  withState('filters', 'setFilters', initialFilters),
+  withState('stocks', 'setFilteredStocks', initialStocks),
+  withState('lessThan', 'setLessThan', 0),
   withState('textSearchInput', 'setSearchText', ''),
+
   withHandlers({
-    changeSkillLevelFilters: ({
-      filters,
-      setFilters,
-    }: PropsWithStateT) => selectedSkillLevel => {
-      // if filter is already applied, cancel filtere.
-      const userIsRemovingFilter = filters.skillLevel.includes(
-        selectedSkillLevel,
-      )
-      if (userIsRemovingFilter) {
-        setFilters({
-          ...filters,
-          skillLevel: filters.skillLevel.filter(
-            eachSkillLevel => eachSkillLevel !== selectedSkillLevel,
-          ),
-        })
+    filterBy: ({ setFilteredStocks, setSearchText }) => (filterCB, value) => {
+      localStorage.setItem('textSearchInput', '')
+      if (!value) {
+        setFilteredStocks(initialStocks)
+        setSearchText('')
       } else {
-        setFilters({
-          ...filters,
-          skillLevel: [ ...filters.skillLevel, selectedSkillLevel ],
-        })
+        const filtered = initialStocks.filter(filterCB)
+        setFilteredStocks(filtered)
       }
     },
-    changeTrackFilters: ({
-      filters,
-      setFilters,
-    }: PropsWithStateT) => selectedTrack => {
-      const userIsRemovingFilter = filters.track.includes(selectedTrack)
-      if (userIsRemovingFilter) {
-        setFilters({
-          ...filters,
-          track: filters.track.filter(eachTrack => eachTrack !== selectedTrack),
-        })
-      } else {
-        setFilters({
-          ...filters,
-          track: [ ...filters.track, selectedTrack ],
-        })
-      }
-    },
-    changeTextFilter: ({ setSearchText }: PropsWithStateT) => ({
-      target: { value },
-    }) => {
+    changeTextFilter: ({
+      setSearchText,
+      stocks,
+      setFilteredStocks,
+    }) => value => {
       setSearchText(value)
       // don't allow leading spaces
-      if (!value.trim()) {
+      if (!value) {
         setSearchText('')
+        setFilteredStocks(initialStocks)
+      } else {
+        const filteredBySearch = stocks.filter(eachStock => {
+          if (value === '') return true
+          return eachStock.sym.includes(value.toUpperCase())
+        })
+        setFilteredStocks(filteredBySearch)
       }
     },
-    resetAllFilters: ({ setFilters }: PropsWithStateT) => () =>
-      setFilters(initialFilters),
+    resetLessThan: ({ setLessThan }) => () => {
+      setLessThan(0)
+      localStorage.setItem('lessThan', 0)
+    },
+  }),
+  lifecycle({
+    componentDidMount () {
+      const initialLessThan = Number(localStorage.getItem('lessThan')) || 0
+      const initialTextSearchInput =
+        localStorage.getItem('textSearchInput') || ''
+      const {
+        setLessThan,
+        setSearchText,
+        filterBy,
+        changeTextFilter,
+      } = this.props
+      setLessThan(initialLessThan)
+      setSearchText(initialTextSearchInput)
+      if (initialLessThan) {
+        filterBy(
+          stock => stock.dates[0].close < initialLessThan,
+          initialLessThan
+        )
+      }
+      if (initialTextSearchInput) changeTextFilter(initialTextSearchInput)
+    },
   }),
   mapProps(
     ({
-      sessions,
-      filters,
+      filterBy,
       textSearchInput,
-      skillLevels,
-      changeSkillLevelFilters,
-      tracks,
-      changeTrackFilters,
       changeTextFilter,
-      resetAllFilters,
-    }: PropsWithStateWithHandlersT) => {
+      stocks,
+      setLessThan,
+      moreThan,
+      lessThan,
+      resetLessThan,
+    }) => {
       return {
-        sessions: filterByAll(sessions, filters, textSearchInput),
-        skillLevelButtons: skillLevels.map(eachLevel => ({
-          isSelected: filters.skillLevel.includes(eachLevel),
-          onClick: () => changeSkillLevelFilters(eachLevel),
-          name: eachLevel,
-        })),
-        trackButtons: tracks.map(eachTrack => ({
-          isSelected: filters.track.includes(eachTrack),
-          onClick: () => changeTrackFilters(eachTrack),
-          name: eachTrack,
-        })),
-        changeTextFilter,
-        resetAllFilters,
+        setLessThanFilter: value => {
+          setLessThan(value)
+          filterBy(stock => stock.dates[0].close < value, value)
+          localStorage.setItem('lessThan', value)
+        },
+        setChangeTextFilter: value => {
+          changeTextFilter(value)
+          localStorage.setItem('textSearchInput', value)
+          resetLessThan()
+        },
         textSearchInput,
+        stocks,
+        moreThan,
+        lessThan,
       }
-    },
-  ),
+    }
+  )
 )
 
 export default withLogic

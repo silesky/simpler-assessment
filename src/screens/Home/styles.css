@@ -1,3 +1,14 @@
 .wrapper {
   text-align: center;
 }
+
+.filterWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 100px;
+}
+
+.filterWrapper input {
+  margin-left: 10px;
+}
