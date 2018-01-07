@@ -1,6 +1,10 @@
 .wrapper {
   text-align: center;
 }
+.wrapper a {
+  font-weight: bold;
+  color: blue;
+}
 
 .filterWrapper {
   display: flex;

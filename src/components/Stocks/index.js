@@ -4,23 +4,20 @@ import { Link } from 'react-router-dom'
 import withLogic from './logic'
 import type { StockT } from '../../shared/types'
 
-type StockPropsT = {
-  textSearchInput: string,
-  setChangeTextFilter: Function,
-  stocks: StockT[],
-  setLessThanFilter: Function,
-  setMoreThanFilter: Function,
-  moreThan: string,
+type StocksPropsT = {
   lessThan: string,
+  setChangeTextFilter: Function,
+  setLessThanFilter: Function,
+  stocks: StockT[],
+  textSearchInput: string,
 }
-
 const Stocks = ({
-  textSearchInput,
-  setChangeTextFilter,
-  stocks,
-  setLessThanFilter,
   lessThan,
-}: StockPropsT): React.Element<*> => (
+  setChangeTextFilter,
+  setLessThanFilter,
+  stocks,
+  textSearchInput,
+}: StocksPropsT): React.Element<*> => (
   <div className='wrapper'>
     <div className='filterWrapper'>
       <label>Symbol Search</label>
@@ -40,19 +37,29 @@ const Stocks = ({
         onChange={({ target: { value } }) => setLessThanFilter(Number(value))}
       />
     </div>
-    {stocks.map(({ sym, lastRefreshed, dates }) => {
+    {stocks.map(({ sym, dates }) => {
       return (
         <Stock
           key={sym}
           symbol={sym}
           currentPrice={dates[0].close}
-          lastRefreshed={lastRefreshed}
+          recentDate={dates[0].date}
         />
       )
     })}
   </div>
 )
-const Stock = ({ symbol, currentPrice, lastRefreshed }) => {
+
+type StockPropsT = {
+  symbol: string,
+  currentPrice: Number,
+  recentDate: string,
+}
+const Stock = ({
+  symbol,
+  currentPrice,
+  recentDate,
+}: StockPropsT): React.Element<*> => {
   const newTo = {
     pathname: `/stocks/${symbol}`,
     symbol: `${symbol}`,
@@ -62,7 +69,7 @@ const Stock = ({ symbol, currentPrice, lastRefreshed }) => {
       <Link key={symbol} to={newTo}>
         {symbol}
       </Link>
-      <p>({lastRefreshed})</p>
+      <p>({recentDate})</p>
       <p>${currentPrice}</p>
     </div>
   )

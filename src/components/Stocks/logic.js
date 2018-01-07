@@ -14,7 +14,6 @@ const withLogic = compose(
   withState('stocks', 'setFilteredStocks', initialStocks),
   withState('lessThan', 'setLessThan', 0),
   withState('textSearchInput', 'setSearchText', ''),
-
   withHandlers({
     filterBy: ({ setFilteredStocks, setSearchText }) => (filterCB, value) => {
       localStorage.setItem('textSearchInput', '')
