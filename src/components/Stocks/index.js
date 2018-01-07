@@ -25,7 +25,7 @@ const Stocks = ({
         placeholder='enter a stock symbol.'
         value={textSearchInput}
         type='text'
-        onChange={({ target: { value } }) => setChangeTextFilter(value.trim())}
+        onChange={setChangeTextFilter}
       />
     </div>
     <div className='filterWrapper'>
@@ -34,7 +34,7 @@ const Stocks = ({
         placeholder='enter a number.'
         value={lessThan || ''}
         type='number'
-        onChange={({ target: { value } }) => setLessThanFilter(Number(value))}
+        onChange={setLessThanFilter}
       />
     </div>
     {stocks.map(({ sym, dates }) => {

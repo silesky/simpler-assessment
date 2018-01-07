@@ -25,18 +25,14 @@ const withLogic = compose(
         setFilteredStocks(filtered)
       }
     },
-    changeTextFilter: ({
-      setSearchText,
-      stocks,
-      setFilteredStocks,
-    }) => value => {
+    changeTextFilter: ({ setSearchText, setFilteredStocks }) => value => {
       setSearchText(value)
       // don't allow leading spaces
       if (!value) {
         setSearchText('')
         setFilteredStocks(initialStocks)
       } else {
-        const filteredBySearch = stocks.filter(eachStock => {
+        const filteredBySearch = initialStocks.filter(eachStock => {
           if (value === '') return true
           return eachStock.sym.includes(value.toUpperCase())
         })
@@ -82,14 +78,16 @@ const withLogic = compose(
       resetLessThan,
     }) => {
       return {
-        setLessThanFilter: value => {
-          setLessThan(value)
-          filterBy(stock => stock.dates[0].close < value, value)
-          localStorage.setItem('lessThan', value)
+        setLessThanFilter: ({ target: { value } }) => {
+          const intVal = Number(value)
+          setLessThan(intVal)
+          filterBy(stock => stock.dates[0].close < intVal, intVal)
+          localStorage.setItem('lessThan', intVal)
         },
-        setChangeTextFilter: value => {
-          changeTextFilter(value)
-          localStorage.setItem('textSearchInput', value)
+        setChangeTextFilter: ({ target: { value } }) => {
+          const trimmedVal = value.trim()
+          changeTextFilter(trimmedVal)
+          localStorage.setItem('textSearchInput', trimmedVal)
           resetLessThan()
         },
         textSearchInput,
