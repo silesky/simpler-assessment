@@ -15,7 +15,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "deploy": "npm run build && git add . && git commit -m 'deployment' --no-verify && sh deploy.sh build"
   },
   "devDependencies": {
     "babel-eslint": "^8.1.2",
@@ -39,5 +40,6 @@
       "prettier-standard",
       "git add"
     ]
-  }
+  },
+  "homepage": "http://sethsilesky.com/simpler-assessment"
 }
