@@ -20,7 +20,7 @@ const withLogic = compose(
           ? {
             stocks: initialStocks,
             textSearchInput: '',
-            lessThan: value,
+            lessThan: 0,
           }
           : {
             stocks: initialStocks.filter(
